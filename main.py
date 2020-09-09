@@ -4,73 +4,82 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-class Item(BaseModel):
+class Tarefa(BaseModel):
     name: str
-    age: int
-    namora: bool
+    descricao: str
 
 listona = {
-    'pedro' : {'age' :  5, 'namora' : True },
-    'lucas' : {'age' :  6, 'namora' : True },
-    'joão'  : {'age' : 80, 'namora' : False}
+    'pegar_vovó_no_jiujistu' : {
+        'descricao' : 'vovó ta la no jiujitsu tem q ir buscar', 
+        'concluido' :  False 
+    },
+
+    'estudar_desComp' : {
+        'descricao' : 'ta mt osso', 
+        'concluido' :  False 
+    },
+
+    'tomar_café' : {
+        'descricao' : 'vamo q vamo', 
+        'concluido' :  True 
+    }
 }
 
-listona2 = [
-    { 'id' : 0, 'name':'pedro', 'age' : 21, 'namora' : True  },
-    { 'id' : 1, 'name':'lucas', 'age' : 21, 'namora' : True  },
-    { 'id' : 2, 'name':'leo'  , 'age' : 21, 'namora' : False },
-    { 'id' : 3, 'name':'manu' , 'age' : 48, 'namora' : True  }
-]
-
 @app.get("/") 
-async def read_root():
-    return listona
-
-@app.get("/listona2") 
-async def read_root():
-    return listona2
-
-@app.post("/addItems/")
-async def create_item(item: Item):
-    listona[item.name] = { 'age' : item.age, 'namora' : item.namora }
-    return item
-
-@app.post("/addItems2/")
-async def create_item(item: Item):
-
-    novo = { 
-        'id'     : len(listona2), 
-        'name'   : item.name, 
-        'age'    : item.age, 
-        'namora' : item.namora 
-    }
+async def read_root(checked: Optional[bool] = None):
     
-    listona2.append(novo)
-    return item
+    if checked is not None:
 
-@app.get("/name/{item_name}")
-async def read_allItem(item_name: str):
-    return listona[item_name]
+        if checked:
+            ret = {k : v for k, v in listona.items() if v['concluido']}
+            return ret
+        else:
+            ret = {k: v for k, v in listona.items() if not v['concluido']}
+            return ret
 
-@app.get("/age/{item_name}")
-async def read_age(item_name: str):
-    return {'name' : item_name, 'age' : listona[item_name]['age']}
+    else:
+        return listona
 
-@app.get("/files/{file_path:path}")
-async def read_file(file_path: str):
-    return {"file_path": file_path}
 
-@app.get("/items/{item_id}")
-async def read_querry(item_id: str, q: Optional[str] = None, short: bool = False):
-    item = {"item_id": item_id}
-    if q:
-        item.update({"q": q})
-    if not short:
-        item.update(
-            {"description": "This is an amazing item that has a long description"}
-        )
-    if short:
-        item.update(
-            {"description": "blah"}
-        )
-    return item
+
+
+@app.post("/addItem/")
+async def create_item(tarefa: Tarefa):
+    listona[tarefa.name.replace(" ", "_")] = { 'descricao' : tarefa.descricao, 'concluido' : False }
+    return tarefa
+
+@app.patch("/checkItem/{tarefa_nome}")
+async def check_item(tarefa_nome: str):
+    listona[tarefa_nome]['concluido'] = not listona[tarefa_nome]['concluido']
+    return tarefa_nome + ' Checked'
+
+@app.patch("/alterDescription/")
+async def alter_description(tarefa: Tarefa):
+    listona[tarefa.name.replace(" ", "_")]['descricao'] = tarefa.descricao
+    return 'description updated to: ' + tarefa.descricao
+
+@app.delete("/delTask/{tarefa_nome}")
+async def delete_task(tarefa_nome: str):
+    listona.pop(tarefa_nome)
+    return 'Task ~'+tarefa_nome+'~ Removed'
+
+# ---------  testes  -----------
+
+# @app.get("/files/{file_path:path}")
+# async def read_file(file_path: str):
+#     return {"file_path": file_path}
+
+# @app.get("/items/{item_id}")
+# async def read_querry(item_id: str, q: Optional[str] = None, short: bool = False):
+#     tarefa = {"item_id": item_id}
+#     if q:
+#         tarefa.update({"q": q})
+#     if not short:
+#         tarefa.update(
+#             {"description": "This is an amazing tarefa that has a long description"}
+#         )
+#     if short:
+#         tarefa.update(
+#             {"description": "blah"}
+#         )
+#     return tarefa
