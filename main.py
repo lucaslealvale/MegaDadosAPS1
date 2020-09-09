@@ -40,9 +40,6 @@ async def read_root(checked: Optional[bool] = None):
     else:
         return listona
 
-
-
-
 @app.post("/addItem/")
 async def create_item(tarefa: Tarefa):
     listona[tarefa.name.replace(" ", "_")] = { 'descricao' : tarefa.descricao, 'concluido' : False }
