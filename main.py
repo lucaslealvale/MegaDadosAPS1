@@ -1,7 +1,10 @@
+from fastapi import FastAPI, HTTPException
+
 from typing import Optional, List
-from fastapi import FastAPI
 from pydantic import BaseModel
+
 import uuid
+
 
 tags_metadata = [
     {
@@ -56,7 +59,16 @@ listona = {
 }
 
 @app.get("/", tags=["Get tasks"]) 
-async def read_root(checked: Optional[bool] = None):
+async def lista_tasks(checked: Optional[bool] = None):
+    """
+    **Selecione tarefas:**
+    
+    - **--**   : Busca todas as tarefas disponiveis
+    
+    - **true** : Busca as tarefas concluidas
+
+    - **false**: Busca as tarefas incompletas
+    """
     if checked is not None:
         if checked:
             return {k:v for k,v in listona.items() if v['concluido']}
@@ -65,26 +77,73 @@ async def read_root(checked: Optional[bool] = None):
     else:
         return listona
     
+    
 @app.get("/{uuid}", tags=["Get tasks"])
-async def read_task(uuid: int):
+async def lista_task(uuid: int):
+    """
+    Listar uma task específica do banco de dados:
+
+    - **uuid**: identificador único da tarefa alvo
+    """
+    if uuid not in listona:
+        raise HTTPException(status_code=404, detail="Item not found")
+
     return {k:v for k,v in listona.items() if k == uuid}
 
-@app.post("/addItem/", tags=["Add tasks"])
-async def create_item(tarefa: Tarefa):
+
+@app.post("/addItem/", tags=["Add tasks"], status_code=201)
+async def adiciona_task(tarefa: Tarefa):
+    """
+    Adiciona uma tarefa ao banco de dados:
+
+    - **nome**: A tarefa precisa ter um nome
+    - **descricao**: A tarefa precisa ter uma descrição
+    """
+
     listona[uuid.uuid4().int] = { 'nome' : tarefa.name, 'descricao' : tarefa.descricao, 'concluido' : False }
     return tarefa
+ 
 
 @app.patch("/checkItem/{uuid}", tags=["Edit tasks"])
-async def check_item(uuid: int):
+async def check_task(uuid: int):
+    """
+    Altere o status de uma terefa:
+
+    - **uuid**: Este parâmetro indica qual tarefa deve ter seu status alternado. 
+    """
+    if uuid not in listona:
+        raise HTTPException(status_code=404, detail="Item not found")
+
     listona[uuid]['concluido'] = not listona[uuid]['concluido']
     return listona[uuid]['nome'] + ' Checked'
 
+
 @app.patch("/alterDescription/{uuid}", tags=["Edit tasks"])
-async def alter_description(uuid: int, tarefa: TarefaDescricao):
+async def alterar_descricao(uuid: int, tarefa: TarefaDescricao):
+    """
+    Alterar a descrição de uma tarefa:
+
+    - **uuid**: Parâmetro fornecido para identificar a tarefa alvo
+    - **descricao**: Nova descrição da tarefa
+    """
+
+    if uuid not in listona:
+        raise HTTPException(status_code=404, detail="Item not found")
+
     listona[uuid]['descricao'] = tarefa.descricao
     return 'description updated to: ' + tarefa.descricao
 
+
 @app.delete("/delTask/{uuid}", tags=["Remove tasks"])
-async def delete_task(uuid: int):
+async def deletar_task(uuid: int):
+    """
+    Remover uma tarefa:
+
+    - **uuid**: Parâmetro fornecido para identificar a tarefa alvo
+    """
+
+    if uuid not in listona:
+        raise HTTPException(status_code=404, detail="Item not found")
+
     listona.pop(uuid)
     return 'Task removed'
