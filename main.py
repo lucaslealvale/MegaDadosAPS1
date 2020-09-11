@@ -39,19 +39,19 @@ class TarefaDescricao(BaseModel):
     descricao: str
 
 listona = {
-    uuid.uuid4().int : {
+    uuid.uuid4() : {
         'nome'       : 'pegar vovó no jiujistu',
         'descricao'  : 'vovó ta la no jiujitsu tem q ir buscar', 
         'concluido'  :  False 
     },
 
-    uuid.uuid4().int : {
+    uuid.uuid4() : {
         'nome'       : 'estudar desComp',
         'descricao'  : 'ta mt osso', 
         'concluido'  :  False 
     },
 
-    uuid.uuid4().int : {
+    uuid.uuid4() : {
         'nome'       : 'tomar café',
         'descricao'  : 'vamo q vamo', 
         'concluido'  :  True 
@@ -79,7 +79,7 @@ async def lista_tasks(checked: Optional[bool] = None):
     
     
 @app.get("/{uuid}", tags=["Get tasks"])
-async def lista_task(uuid: int):
+async def lista_task(uuid: uuid.UUID):
     """
     Listar uma task específica do banco de dados:
 
@@ -100,12 +100,12 @@ async def adiciona_task(tarefa: Tarefa):
     - **descricao**: A tarefa precisa ter uma descrição
     """
 
-    listona[uuid.uuid4().int] = { 'nome' : tarefa.name, 'descricao' : tarefa.descricao, 'concluido' : False }
-    return tarefa
+    listona[uuid.uuid4()] = { 'nome' : tarefa.name, 'descricao' : tarefa.descricao, 'concluido' : False }
+    return uuid.uuid4()
  
 
 @app.patch("/checkItem/{uuid}", tags=["Edit tasks"])
-async def check_task(uuid: int):
+async def check_task(uuid: uuid.UUID):
     """
     Altere o status de uma terefa:
 
@@ -119,7 +119,7 @@ async def check_task(uuid: int):
 
 
 @app.patch("/alterDescription/{uuid}", tags=["Edit tasks"])
-async def alterar_descricao(uuid: int, tarefa: TarefaDescricao):
+async def alterar_descricao(uuid: uuid.UUID, tarefa: TarefaDescricao):
     """
     Alterar a descrição de uma tarefa:
 
@@ -135,7 +135,7 @@ async def alterar_descricao(uuid: int, tarefa: TarefaDescricao):
 
 
 @app.delete("/delTask/{uuid}", tags=["Remove tasks"])
-async def deletar_task(uuid: int):
+async def deletar_task(uuid: uuid.UUID):
     """
     Remover uma tarefa:
 
