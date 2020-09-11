@@ -99,10 +99,9 @@ async def adiciona_task(tarefa: Tarefa):
     - **nome**: A tarefa precisa ter um nome
     - **descricao**: A tarefa precisa ter uma descrição
     """
-
-    listona[uuid.uuid4()] = { 'nome' : tarefa.name, 'descricao' : tarefa.descricao, 'concluido' : False }
-    return uuid.uuid4()
- 
+    thisUuid = uuid.uuid4()
+    listona[thisUuid] = { 'nome' : tarefa.name, 'descricao' : tarefa.descricao, 'concluido' : False }
+    return {thisUuid : listona[thisUuid]}
 
 @app.patch("/checkItem/{uuid}", tags=["Edit tasks"])
 async def check_task(uuid: uuid.UUID):
@@ -115,8 +114,7 @@ async def check_task(uuid: uuid.UUID):
         raise HTTPException(status_code=404, detail="Item not found")
 
     listona[uuid]['concluido'] = not listona[uuid]['concluido']
-    return listona[uuid]['nome'] + ' Checked'
-
+    return {uuid : listona[uuid]}
 
 @app.patch("/alterDescription/{uuid}", tags=["Edit tasks"])
 async def alterar_descricao(uuid: uuid.UUID, tarefa: TarefaDescricao):
@@ -131,8 +129,7 @@ async def alterar_descricao(uuid: uuid.UUID, tarefa: TarefaDescricao):
         raise HTTPException(status_code=404, detail="Item not found")
 
     listona[uuid]['descricao'] = tarefa.descricao
-    return 'description updated to: ' + tarefa.descricao
-
+    return {uuid : listona[uuid]}
 
 @app.delete("/delTask/{uuid}", tags=["Remove tasks"])
 async def deletar_task(uuid: uuid.UUID):
@@ -146,4 +143,4 @@ async def deletar_task(uuid: uuid.UUID):
         raise HTTPException(status_code=404, detail="Item not found")
 
     listona.pop(uuid)
-    return 'Task removed'
+    return f'Task {uuid} removed'
